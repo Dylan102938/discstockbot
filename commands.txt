@@ -1,0 +1,11 @@
+in, in
+trim, trim
+trimming, trim
+trimmed, trim
+close, close
+closing, close
+closed, close
+out, out
+stop, stop
+stopped, stop
+falsesafe, falsesafe
