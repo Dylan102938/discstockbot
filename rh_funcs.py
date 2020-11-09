@@ -97,7 +97,7 @@ def nearest_friday():
 
 def main():
     rh = Robinhood()
-    rh.login(username="dfeng102938@gmail.com", password="Dylan@5188", challenge_type="sms")
+    rh.login(username="", password="", challenge_type="sms")
     print(json.dumps(trim_position(rh, 'AAPL'), indent=4))
 
 
