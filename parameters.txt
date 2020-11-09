@@ -1,5 +1,0 @@
-over, 'over ' + sent[i]
-above, 'over ' + sent[i]
-under, 'under ' + sent[i]
-below, 'under ' + sent[i]
-breakeven, 'breakeven'

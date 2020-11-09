@@ -1,14 +1,16 @@
-def parse(sent, commands="", cats="", tickers="", additional=""):
-    action = ""
-    cat = ""
-    ticker = ""
+commands_file = 'keywords/commands.txt'
+categories_file = 'keywords/cats.txt'
+parameters_file = 'keywords/parameters.txt'
+ticker_file = 'keywords/tickers.txt'
 
-    for word in sent.split():
+
+def parse(sent, commands, cats, tickers, parameters):
+    command, cat, ticker, params = "", "", "", []
+    s = sent.split()
+
+    for word in s:
         if word.lower() in commands:
-            action = commands[word.lower()]
-        
-        if action == "" and word.lower() in ['call', 'calls', 'put', 'puts']:
-            action = "in"
+            command = eval(commands[word.lower()])
         
         if word.lower() in cats:
             cat = cats[word.lower()]
@@ -16,35 +18,22 @@ def parse(sent, commands="", cats="", tickers="", additional=""):
         if word.lower() in tickers:
             ticker = tickers[word.lower()]
     
-    if action != "":
-        parameters = []
-        sent = sent.split()
+    if command != "":
+        for i in range(len(s)):
+            if s[i-1].lower() in parameters:
+                params.append(eval(parameters[s[i - 1].lower()]))
 
-        for i in range(1, len(sent)):
-            if sent[i-1].lower() in additional:
-                print(additional[sent[i-1].lower()])
-                parameters.append(eval(additional[sent[i-1].lower()]))
-        
-        if sent[0].lower() in additional:
-            try:
-                parameters.append(eval(additional[sent[0].lower()]))
-            except:
-                pass
-        
-        if sent[len(sent)-1].lower() in additional:
-            try:
-                parameters.append(eval(additional[sent[len(sent)-1].lower()]))
-            except:
-                pass
+        if "%+" in sent or "%+" in sent:
+            params = ['fake']
 
-
-        print(action, ticker, cat, parameters)
+        print(command, ticker, cat, params)
+        return {'command': command, 'ticker': ticker, 'category': cat, 'parameters': params}
 
 
 def load_words(name):
     words = dict()
 
-    with open (name, 'r') as f:
+    with open(name, 'r') as f:
         word = f.readline()
         while word:
             label, word = word.strip().split(', ')
@@ -56,16 +45,7 @@ def load_words(name):
 
 
 def words_driver():
-    return load_words('commands.txt'), load_words('cats.txt'), load_words('tickers.txt'), load_words('parameters.txt')
-
-
-commands, cats, tickers, parameters = words_driver()
-with open('log.txt') as f:
-    line = f.readline()
-    while line:
-        print(line.strip())
-        parse(line, commands, cats, tickers, parameters)
-        print()
-        
-        line = f.readline()
-
+    return load_words(commands_file), \
+           load_words(categories_file), \
+           load_words(ticker_file), \
+           load_words(parameters_file)

@@ -1,0 +1,7 @@
+over, 'over ' + s[i]
+above, 'over ' + s[i]
+under, 'under ' + s[i]
+below, 'under ' + s[i]
+breakeven, 'breakeven'
+light, 'light'
+risky, 'light'
