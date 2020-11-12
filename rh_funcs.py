@@ -79,8 +79,8 @@ def order_or_watch(client, ticker, option, amt, watch_price, watch_func):
 
 
 def trim_position(client, ticker, pct=0.5, last_stock=""):
-    options = client.securities_owned()
-    return options
+    positions = client.securities_owned()
+    return positions['results']
 
 
 def get_curr_price(client, ticker):
@@ -97,7 +97,7 @@ def nearest_friday():
 
 def main():
     rh = Robinhood()
-    rh.login(username="", password="", challenge_type="sms")
+    rh.login(username="oscar.s.lee@gmail.com", password="3o*M5Wn6Tp&GQ*o4", challenge_type="sms")
     print(json.dumps(trim_position(rh, 'AAPL'), indent=4))
 
 
