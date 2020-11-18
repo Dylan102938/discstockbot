@@ -26,7 +26,6 @@ def parse(sent, commands, cats, tickers, parameters):
         if "%+" in sent or "%+" in sent:
             params = ['fake']
 
-        print(command, ticker, cat, params)
         return {'command': command, 'ticker': ticker, 'category': cat, 'parameters': params}
 
 
@@ -49,3 +48,4 @@ def words_driver():
            load_words(categories_file), \
            load_words(ticker_file), \
            load_words(parameters_file)
+
