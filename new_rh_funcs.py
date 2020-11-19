@@ -3,11 +3,15 @@ import json
 import threading
 import time
 import datetime
+import urllib.parse
+import requests
 
 INSTRUMENT_BASE = "https://robinhood.com/options/instruments/"
 paper_portfolio = {}
 default = {'amt':1, 'watch_price':None}
 
+
+# Returns nearest Friday, used to get next closest option
 def nearest_friday():
     today = datetime.date.today()
     friday = today + datetime.timedelta((4 - today.weekday()) % 7)
@@ -15,6 +19,7 @@ def nearest_friday():
     return friday.strftime("%Y-%m-%d")
 
 
+# Changes dictionary or array to properly labeled dictionary
 def parse_params(parameters):
     return_dict = dict(default)
 
@@ -31,8 +36,15 @@ def parse_params(parameters):
     return return_dict
 
 
+# Order Class
 class Order:
-
+    """
+    client: Robinhood client
+    command: in, trim, watch, close, falsesafe
+    ticker: stock ticker for order
+    order_type: call, put
+    parameters: additional order modifications as a dict
+    """
     def __init__(self, client, command, ticker, order_type, parameters={'amt':1, 'watch_price':None}):
         self.client = client
         self.command = command
@@ -45,7 +57,7 @@ class Order:
 
         self.order_dict[command](self)
 
-
+    # Returns stock info as string
     def __str__(self):
         return_str = 'Order Type: ' + self.command + '\n'
         return_str += 'Option Type: ' + self.order_type + '\n'
@@ -57,119 +69,139 @@ class Order:
 
         return return_str
 
-
+    # gets current price of STOCK
     def get_curr_price(self):
         curr_price = self.client.get_quote(self.ticker)
         curr_price = float(curr_price['last_trade_price'])
         
         return curr_price
-    
 
+    # gets current price of OPTION
+    def get_curr_option_price(self):
+        option = self.get_option()
+        instrument_url = urllib.parse.quote_plus(option['url'])
+
+        # Custom request (pyrh is faulty)
+        url = 'https://api.robinhood.com/marketdata/options/?instruments=' + instrument_url
+        headers = dict(self.client.headers)
+        headers['Authorization'] = 'Bearer ' + self.client.auth_token
+        instr_data = json.loads(requests.get(url, headers=headers).text)
+
+        price = float(instr_data['results'][0]['ask_price'])*100
+        return price
+
+    # handles 'in' command
     def increase_position(self):
-        curr_price = self.get_curr_price()
-        
-        options = self.client.get_options(self.ticker, nearest_friday(), self.order_type)
-        option = None
+        # get option of interest
+        option = self.get_option()
 
-        if self.order_type == 'call':
-            for o in options:
-                if 0 < float(o['strike_price']) - curr_price < 0.5:
-                    option = o
-                    break
+        # no limit for strike price set
+        if not self.parameters['watch_price']:
+            self.update_portfolio()
+            return self
+
+        # limit for strike price set, start threading function
         else:
-            for o in options:
-                if 0 < curr_price - float(o['strike_price'])  < 0.5:
-                    option = o
-                    break
+            action = threading.Thread(target=self.wait_for_price, args=())
+            action.start()
 
-        return self.order_or_watch(option)
+            return self
 
-
+    # Function handles 'trim' and 'close' command
     def reduce_position(self, pct):
-        # amt = self.client.get_positions(self.ticker, self.order_type)
+        # no additional exiting parameters, exit position right away
         if 'breakeven' not in self.parameters and 'rest' not in self.parameters:
-            try:
-                paper_portfolio[self.ticker][self.order_type]['amt'] *= pct
-                self.profits = self.get_curr_price() - paper_portfolio[self.ticker][self.order_type]['avg_cost']
-                if paper_portfolio[self.ticker][self.order_type]['amt'] == 0:
-                    paper_portfolio[self.ticker][self.order_type]['avg_cost'] = 0
 
-                self.fulfilled = True
-                self.ended = datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+            # replace with actual selling function
+            paper_portfolio[self.ticker][self.order_type]['amt'] *= pct
+            self.profits = self.get_curr_option_price() - paper_portfolio[self.ticker][self.order_type]['avg_cost']
+            if paper_portfolio[self.ticker][self.order_type]['amt'] == 0:
+                paper_portfolio[self.ticker][self.order_type]['avg_cost'] = 0
 
-                return self
-            
-            except:
-                return self
+            self.fulfilled = True
+            self.ended = datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 
+            return self
+
+        # additional exiting parameters, pass to threading function
         else:
             self.pct = pct
-            option = ''
-            action = threading.Thread(target=self.wait_for_price, args=(option,))
+            action = threading.Thread(target=self.wait_for_price, args=())
             action.start()
             
             return self
-        
 
-    def order_or_watch(self, option):
-        if not self.parameters['watch_price']:
-            self.update_portfolio(self.parameters['amt'])
+    # function to handle watch command
+    def watch(self):
+        self.fulfilled = True
+        self.ended = datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 
-            return self
+        return self
 
-        else:
-            action = threading.Thread(target=self.wait_for_price, args=(option,))
-            action.start()
+    # function to handle falsesafe command
+    def falsesafe(self):
+        return self
 
-            return self
-
-
-    def wait_for_price(self, option):
+    # threading function target
+    def wait_for_price(self):
         count = 0
+
+        # checks if parameters match every 5 seconds, loops 3600 times total
         while not self.fulfilled and count < 3600:
             time.sleep(5)
 
             price = self.get_curr_price()
-            cost = paper_portfolio[self.ticker][self.order_type]['avg_cost']
-            
-            if self.parameters['watch_price'] and price >= self.parameters['watch_price'] and self.order_type == 'call':
-                self.update_portfolio(self.parameters['amt'])
-            
-            elif self.parameters['watch_price'] and price <= self.parameters['watch_price'] and self.order_type == 'put':
-                self.update_portfolio(self.parameters['amt'])
 
+            # check if item exists in portfolio dict
+            try:
+                cost = paper_portfolio[self.ticker][self.order_type]['avg_cost']
+            except:
+                cost = 0
+
+            # check if watch price fpr call is satisfied
+            if self.parameters['watch_price'] and price >= self.parameters['watch_price'] and self.order_type == 'call':
+                self.update_portfolio()
+
+            # check if watch price for put is satisfied
+            elif self.parameters['watch_price'] and price <= self.parameters['watch_price'] and self.order_type == 'put':
+                self.update_portfolio()
+
+            # check if breakeven for close or trim order is satisfied
             if price <= cost and 'breakeven' in self.parameters:
+                # replace with actual selling function
                 paper_portfolio[self.ticker][self.order_type]['amt'] *= self.pct
                 if paper_portfolio[self.ticker][self.order_type]['amt'] == 0:
                     paper_portfolio[self.ticker][self.order_type]['avg_cost'] = 0
-                self.profits = price - cost
+                self.profits = self.get_curr_option_price() - cost
 
                 self.fulfilled = True
                 self.ended = datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 
-            if 'rest' in self.parameters and (self.order_type == 'trim' or self.order_type == 'close'):
+            # check if rest for close or trim is satisfied
+            if 'rest' in self.parameters and (self.command == 'trim' or self.command == 'close'):
                 paper_portfolio[self.ticker][self.order_type]['amt'] = 0
-                paper_portfolio[self.ticker][self.order_type]['watch_price'] = 0
-                self.profits = price - cost
+                paper_portfolio[self.ticker][self.order_type]['avg_cost'] = 0
+                self.profits = self.get_curr_option_price() - cost
 
                 self.fulfilled = True
                 self.ended = datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 
             count += 1
-    
-    
-    def update_portfolio(self, amt):
+
+    # function to add stocks to portfolio after purchasing call, put
+    def update_portfolio(self):
         try: 
             existing_amt = paper_portfolio[self.ticker][self.order_type]['amt']
             additional_amt = self.parameters['amt']
             existing_cost = paper_portfolio[self.ticker][self.order_type]['avg_cost']
-            additional_cost = self.get_curr_price()
+            additional_cost = self.get_curr_option_price()
             
             new_amt = existing_amt + additional_amt
             new_avg_cost = (existing_amt*existing_cost + additional_amt*additional_cost)/new_amt
 
             paper_portfolio[self.ticker][self.order_type]['amt'] = new_amt
             paper_portfolio[self.ticker][self.order_type]['avg_cost'] = new_avg_cost
+
             self.fulfilled = True
             self.ended = datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 
@@ -177,22 +209,32 @@ class Order:
             paper_portfolio[self.ticker] = {'call': {'amt':0, 'avg_cost':0}, 'put': {'amt':0, 'avg_cost':0}}
 
             paper_portfolio[self.ticker][self.order_type]['amt'] = self.parameters['amt']
-            paper_portfolio[self.ticker][self.order_type]['avg_cost'] = self.get_curr_price()
+            paper_portfolio[self.ticker][self.order_type]['avg_cost'] = self.get_curr_option_price()
+
             self.fulfilled = True
             self.ended = datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 
-    
-    def watch(self):
-        self.fulfilled = True
-        self.ended = self.datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+    # get option based on passed in parameters
+    def get_option(self):
+        curr_price = self.get_curr_price()
 
-        return self
+        options = self.client.get_options(self.ticker, nearest_friday(), self.order_type)
+        option = None
 
+        if self.order_type == 'call':
+            for o in options:
+                if 0 < float(o['strike_price']) - curr_price <= 1:
+                    option = o
+                    break
+        else:
+            for o in options:
+                if 0 <= curr_price - float(o['strike_price']) <= 1:
+                    option = o
+                    break
 
-    def falsesafe(self):
-        return self
-    
-    
+        return option
+
+    # object repr of order
     def get_object(self):
         return_dict = {
             'order_type': self.command,
@@ -207,7 +249,7 @@ class Order:
 
         return return_dict
 
-
+    # function map
     order_dict = {
         'in': increase_position,
         'trim': lambda self: self.reduce_position(0.5),
@@ -215,5 +257,3 @@ class Order:
         'close': lambda self: self.reduce_position(0),
         'falsesafe': falsesafe
     }
-
-

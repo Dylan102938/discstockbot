@@ -32,7 +32,7 @@ def process_and_run(message):
     if parsed_dict:
         try:
             correct_func = rh_funcs.func_map[parsed_dict['command']][parsed_dict['category']]
-            amt, watch_price = rh_funcs.parse_params(parsed_dict['parameters']
+            amt, watch_price = rh_funcs.parse_params(parsed_dict['parameters'])
             
             return correct_func(rh, parsed_dict['ticker'], amt, watch_price)
         
