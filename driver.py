@@ -1,10 +1,13 @@
 import discord
-import rh_funcs
+from new_rh_funcs import *
 import parser
+import json
 
-token = 'Nzc0NTIzNzMzODc2MDE1MTQ0.X6ZBcA.rx_Z_W95iUD6OHOwu6YizIdvvtU'
-USER = ""
-PASS = ""
+last_ticker = ""
+last_category = ""
+order_catalog = []
+trades_json = {'paper_portfolio': paper_portfolio, 'order_catalog': order_catalog}
+rh = None
 
 client = discord.Client()
 
@@ -24,26 +27,45 @@ async def on_message(message):
 
 
 def process_and_run(message):
+    global last_ticker, last_category
     commands, cats, tickers, parameters = parser.words_driver()
     parsed_dict = parser.parse(message, commands, cats, tickers, parameters)
-    
-    print("Parsed info:", parsed_dict)
 
     if parsed_dict:
-        try:
-            correct_func = rh_funcs.func_map[parsed_dict['command']][parsed_dict['category']]
-            amt, watch_price = rh_funcs.parse_params(parsed_dict['parameters'])
-            
-            return correct_func(rh, parsed_dict['ticker'], amt, watch_price)
-        
-        except:
-            return None
+        if not parsed_dict['ticker']:
+            parsed_dict['ticker'] = last_ticker
+        if not parsed_dict['category']:
+            parsed_dict['category'] = last_ticker
+
+        new_order = Order(rh, parsed_dict['command'], parsed_dict['ticker'], parsed_dict['category'], parse_params(parsed_dict['params']))
+        if new_order:
+            order_catalog.append(new_order)
+            print(new_order)
+
+            last_ticker = parsed_dict['ticker']
+            last_category = parsed_dict['category']
+
+            trades_json['paper_portfolio'] = paper_portfolio
+            trades_json['order_catalog'] = order_catalog
+
+            with open('paper_log.json', 'w') as f:
+                json.dump(trades_json, f)
+
+            return str(new_order)
+        return 'Order Failed!'
 
 
-# login to robinhood
-rh = Robinhood()
-rh.login(username=USER, password=PASS, challenge_type='sms')            
+def main():
+    # login to Robinhood
+    user = input("Enter Robinhood Email: ")
+    passw = input("Enter Robinhood Password: ")
+    rh = Robinhood()
+    rh.login(username=user, password=passw, challenge_type='sms')
 
-# login to discord
-client.run(token)
+    # login to discord
+    disc_token = 'Nzc0NTIzNzMzODc2MDE1MTQ0.X6ZBcA.pir4GJZfeS7ZcrneCCPi19XzI64'
+    client.run(disc_token)
 
+
+if __name__ == "__main__":
+    main()

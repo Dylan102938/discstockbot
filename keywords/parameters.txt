@@ -5,3 +5,4 @@ below, 'under ' + s[i]
 breakeven, 'breakeven'
 light, 'light'
 risky, 'light'
+rest, 'rest'
