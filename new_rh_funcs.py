@@ -220,17 +220,27 @@ class Order:
 
         options = self.client.get_options(self.ticker, nearest_friday(), self.order_type)
         option = None
+        closest_price = None
 
         if self.order_type == 'call':
             for o in options:
-                if 0 < float(o['strike_price']) - curr_price <= 1:
-                    option = o
-                    break
+                if float(o['strike_price']) - curr_price > 0:
+                    if not option:
+                        option = o
+                        closest_price = o['strike_price']
+                    elif float(o['strike_price']) < closest_price:
+                        option = o
+                        closest_price = o['stirke_price']
+
         else:
             for o in options:
-                if 0 <= curr_price - float(o['strike_price']) <= 1:
-                    option = o
-                    break
+                if float(o['strike_price']) - curr_price < 0:
+                    if not option:
+                        option = o
+                        closest_price = o['strike_price']
+                    elif float(o['strike_price']) > closest_price:
+                        option = o
+                        closest_price = o['stirke_price']
 
         return option
 
