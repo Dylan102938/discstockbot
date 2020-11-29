@@ -18,3 +18,5 @@ uber, UBER
 lyft, LYFT
 roku, ROKU
 amd, AMD
+zm, ZM
+pltr, PLTR

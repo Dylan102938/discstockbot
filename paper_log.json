@@ -1,1 +1,220 @@
-{"paper_portfolio": {"MSFT": {"call": {"amt": 0, "avg_cost": 0}, "put": {"amt": 0.15, "avg_cost": 0}}}, "order_catalog": [
+{
+    "paper_portfolio": {
+        "ROKU": {
+            "call": {
+                "amt": 0.0,
+                "avg_cost": 0
+            },
+            "put": {
+                "amt": 0,
+                "avg_cost": 0
+            }
+        },
+        "BA": {
+            "call": {
+                "amt": 0,
+                "avg_cost": 0
+            },
+            "put": {
+                "amt": 0,
+                "avg_cost": 0
+            }
+        },
+        "ZM": {
+            "call": {
+                "amt": 0.0,
+                "avg_cost": 0
+            },
+            "put": {
+                "amt": 0,
+                "avg_cost": 0
+            }
+        },
+        "PLTR": {
+            "call": {
+                "amt": 0.0,
+                "avg_cost": 0
+            },
+            "put": {
+                "amt": 0,
+                "avg_cost": 0
+            }
+        }
+    },
+    "order_catalog": [
+        {
+            "order_type": "watch",
+            "option_type": "",
+            "parameters": {
+                "amt": 1,
+                "watch_price": null
+            },
+            "started": "27/11/2020 23:28:22",
+            "fulfilled": "27/11/2020 23:28:22",
+            "profits_share": 0
+        },
+        {
+            "order_type": "in",
+            "option_type": "call",
+            "parameters": {
+                "amt": 0.15,
+                "watch_price": null
+            },
+            "started": "27/11/2020 23:29:35",
+            "fulfilled": "27/11/2020 23:29:38",
+            "profits_share": 0
+        },
+        {
+            "order_type": "in",
+            "option_type": "put",
+            "parameters": {
+                "amt": 1,
+                "watch_price": null
+            },
+            "started": "27/11/2020 23:32:02",
+            "fulfilled": "27/11/2020 23:32:04",
+            "profits_share": 0
+        },
+        {
+            "order_type": "in",
+            "option_type": "call",
+            "parameters": {
+                "amt": 1,
+                "watch_price": null
+            },
+            "started": "27/11/2020 23:54:09",
+            "fulfilled": "27/11/2020 23:54:11",
+            "profits_share": 0
+        },
+        {
+            "order_type": "watch",
+            "option_type": "call",
+            "parameters": {
+                "amt": 1,
+                "watch_price": null
+            },
+            "started": "27/11/2020 23:56:04",
+            "fulfilled": "27/11/2020 23:56:04",
+            "profits_share": 0
+        },
+        {
+            "order_type": "trim",
+            "option_type": "call",
+            "parameters": {
+                "amt": 1,
+                "watch_price": null
+            },
+            "started": "27/11/2020 23:56:29",
+            "fulfilled": "27/11/2020 23:56:30",
+            "profits_share": 0.0
+        },
+        {
+            "order_type": "watch",
+            "option_type": "call",
+            "parameters": {
+                "amt": 1,
+                "watch_price": null
+            },
+            "started": "27/11/2020 23:57:22",
+            "fulfilled": "27/11/2020 23:57:22",
+            "profits_share": 0
+        },
+        {
+            "order_type": "in",
+            "option_type": "call",
+            "parameters": {
+                "amt": 0.15,
+                "watch_price": null
+            },
+            "started": "27/11/2020 23:57:49",
+            "fulfilled": "27/11/2020 23:57:51",
+            "profits_share": 0
+        },
+        {
+            "order_type": "trim",
+            "option_type": "call",
+            "parameters": {
+                "amt": 1,
+                "watch_price": null
+            },
+            "started": "27/11/2020 23:58:18",
+            "fulfilled": "27/11/2020 23:58:19",
+            "profits_share": 0.0
+        },
+        {
+            "order_type": "close",
+            "option_type": "call",
+            "parameters": {
+                "amt": 1,
+                "watch_price": null
+            },
+            "started": "27/11/2020 23:58:27",
+            "fulfilled": "27/11/2020 23:58:28",
+            "profits_share": 0.0
+        },
+        {
+            "order_type": "in",
+            "option_type": "put",
+            "parameters": {
+                "amt": 1,
+                "watch_price": 215.73
+            },
+            "started": "27/11/2020 23:59:50"
+        },
+        {
+            "order_type": "close",
+            "option_type": "put",
+            "parameters": {
+                "amt": 1,
+                "watch_price": null
+            },
+            "started": "28/11/2020 00:00:58",
+            "fulfilled": "28/11/2020 00:00:59",
+            "profits_share": 805.0000000000001
+        },
+        {
+            "order_type": "close",
+            "option_type": "call",
+            "parameters": {
+                "amt": 1,
+                "watch_price": null
+            },
+            "started": "28/11/2020 00:01:15",
+            "fulfilled": "28/11/2020 00:01:16",
+            "profits_share": 0.0
+        },
+        {
+            "order_type": "close",
+            "option_type": "put",
+            "parameters": {
+                "amt": 1,
+                "watch_price": null
+            },
+            "started": "28/11/2020 00:01:43",
+            "fulfilled": "28/11/2020 00:01:44",
+            "profits_share": 0.0
+        },
+        {
+            "order_type": "close",
+            "option_type": "put",
+            "parameters": {
+                "amt": 1,
+                "watch_price": null
+            },
+            "started": "28/11/2020 00:01:55",
+            "fulfilled": "28/11/2020 00:01:56",
+            "profits_share": 285.0
+        },
+        {
+            "order_type": "close",
+            "option_type": "call",
+            "parameters": {
+                "amt": 1,
+                "watch_price": null
+            },
+            "started": "28/11/2020 00:02:02",
+            "fulfilled": "28/11/2020 00:02:03",
+            "profits_share": 0.0
+        }
+    ]
+}

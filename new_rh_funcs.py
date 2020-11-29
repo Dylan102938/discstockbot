@@ -14,7 +14,7 @@ default = {'amt':1, 'watch_price':None}
 # Returns nearest Friday, used to get next closest option
 def nearest_friday():
     today = datetime.date.today()
-    friday = today + datetime.timedelta((4 - today.weekday()) % 7)
+    friday = today + datetime.timedelta((3-today.weekday())%7+1)
     
     return friday.strftime("%Y-%m-%d")
 
@@ -227,20 +227,20 @@ class Order:
                 if float(o['strike_price']) - curr_price > 0:
                     if not option:
                         option = o
-                        closest_price = o['strike_price']
+                        closest_price = float(o['strike_price'])
                     elif float(o['strike_price']) < closest_price:
                         option = o
-                        closest_price = o['stirke_price']
+                        closest_price = float(o['strike_price'])
 
         else:
             for o in options:
                 if float(o['strike_price']) - curr_price < 0:
                     if not option:
                         option = o
-                        closest_price = o['strike_price']
+                        closest_price = float(o['strike_price'])
                     elif float(o['strike_price']) > closest_price:
                         option = o
-                        closest_price = o['stirke_price']
+                        closest_price = float(o['strike_price'])
 
         return option
 
@@ -248,6 +248,7 @@ class Order:
     def get_object(self):
         return_dict = {
             'order_type': self.command,
+            'ticker': self.ticker,
             'option_type': self.order_type,
             'parameters': self.parameters,
             'started': self.started,

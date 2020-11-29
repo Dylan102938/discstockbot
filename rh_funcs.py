@@ -100,7 +100,6 @@ def reduce(client, ticker, amt):
     return 'Sold ' + str(amt) + ' of ' + ticker + ' at ' + now + ' for ' + str(curr_price)
 
 
-
 # Helper Functions
 def get_curr_price(client, ticker):
     curr_price = client.get_quote(ticker)
@@ -114,7 +113,6 @@ def nearest_friday():
     return friday.strftime("%Y-%m-%d")
 
 
-
 def parse_params(parameters):
     return_dict = dict()
 
@@ -126,14 +124,5 @@ def parse_params(parameters):
         if 'breakeven' in param:
             return_dict['breakeven'] = True
     
-    return return_dict 
+    return return_dict
 
-
-def main():
-    rh = Robinhood()
-    rh.login(username="", password="", challenge_type="sms")
-    print(json.dumps(trim_position(rh, 'AAPL'), indent=4))
-
-
-if __name__ == "__main__":
-    main()
