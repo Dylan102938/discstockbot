@@ -8,7 +8,7 @@ import requests
 
 INSTRUMENT_BASE = "https://robinhood.com/options/instruments/"
 paper_portfolio = {}
-default = {'amt':1, 'watch_price':None}
+default = {'amt': 1, 'watch_price': None}
 
 
 # Returns nearest Friday, used to get next closest option
@@ -24,7 +24,7 @@ def parse_params(parameters):
     return_dict = dict(default)
 
     for param in parameters:
-        if 'above' in param or 'below' in param:
+        if 'over' in param or 'below' in param:
             return_dict['watch_price'] = float(param.split()[1])
         if 'light' in param:
             return_dict['amt'] = 0.15
@@ -32,7 +32,7 @@ def parse_params(parameters):
             return_dict['breakeven'] = True
         if 'rest' in param:
             return_dict['rest'] = True
-    
+
     return return_dict
 
 
@@ -45,6 +45,7 @@ class Order:
     order_type: call, put
     parameters: additional order modifications as a dict
     """
+    # [COMPLETE]
     def __init__(self, client, command, ticker, order_type, parameters={'amt':1, 'watch_price':None}):
         self.client = client
         self.command = command
@@ -57,7 +58,7 @@ class Order:
 
         self.order_dict[command](self)
 
-    # Returns stock info as string
+    # Returns stock info as string [COMPLETE]
     def __str__(self):
         return_str = 'Order Type: ' + self.command + '\n'
         return_str += 'Option Type: ' + self.order_type + '\n'
@@ -69,29 +70,23 @@ class Order:
 
         return return_str
 
-    # gets current price of STOCK
-    def get_curr_price(self):
-        curr_price = self.client.get_quote(self.ticker)
-        curr_price = float(curr_price['last_trade_price'])
-        
-        return curr_price
+    # object repr of order [COMPLETE]
+    def get_object(self):
+        return_dict = {
+            'order_type': self.command,
+            'ticker': self.ticker,
+            'option_type': self.order_type,
+            'parameters': self.parameters,
+            'started': self.started,
+        }
 
-    # gets current price of OPTION
-    def get_curr_option_price(self, option=None):
-        if not option:
-            option = self.get_option()
-        instrument_url = urllib.parse.quote_plus(option['url'])
+        if self.fulfilled:
+            return_dict['fulfilled'] = self.ended
+            return_dict['profits_per_share'] = self.profits
 
-        # Custom request (pyrh is faulty)
-        url = 'https://api.robinhood.com/marketdata/options/?instruments=' + instrument_url
-        headers = dict(self.client.headers)
-        headers['Authorization'] = 'Bearer ' + self.client.auth_token
-        instr_data = json.loads(requests.get(url, headers=headers).text)
+        return return_dict
 
-        price = float(instr_data['results'][0]['ask_price'])*100
-        return price
-
-    # handles 'in' command
+    # handles 'in' command [COMPLETE]
     def increase_position(self):
         # get option of interest
         option = self.get_option()
@@ -108,18 +103,17 @@ class Order:
 
             return self
 
-    # Function handles 'trim' and 'close' command
+    # Function handles 'trim' and 'close' command [COMPLETE]
     def reduce_position(self, pct):
         # no additional exiting parameters, exit position right away
         if 'breakeven' not in self.parameters and 'rest' not in self.parameters:
-            # replace with actual selling function
             paper_portfolio[self.ticker][self.order_type]['amt'] *= pct
-
             o = self.get_option(link=paper_portfolio[self.ticker][self.order_type]['link'])
             self.profits = self.get_curr_option_price(option=o) - paper_portfolio[self.ticker][self.order_type]['avg_cost']
             
             if paper_portfolio[self.ticker][self.order_type]['amt'] == 0:
                 paper_portfolio[self.ticker][self.order_type]['avg_cost'] = 0
+                paper_portfolio[self.ticker][self.order_type]['link'] = ''
 
             self.fulfilled = True
             self.ended = datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
@@ -134,26 +128,26 @@ class Order:
             
             return self
 
-    # function to handle watch command
+    # function to handle watch command [COMPLETE]
     def watch(self):
         self.fulfilled = True
         self.ended = datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 
         return self
 
-    # function to handle falsesafe command
+    # function to handle falsesafe command [COMPELTE]
     def falsesafe(self):
         return self
 
-    # threading function target
+    # threading function target [COMPLETE]
     def wait_for_price(self):
         count = 0
 
-        # checks if parameters match every 5 seconds, loops 3600 times total
+        # checks if parameters match every 5 seconds, loops 3600 times total [COMPLETE]
         while not self.fulfilled and count < 3600:
             time.sleep(5)
 
-            price = self.get_curr_price)
+            price = self.get_curr_price()
 
             # check if item exists in portfolio dict
             try:
@@ -161,7 +155,7 @@ class Order:
             except:
                 cost = 0
 
-            # check if watch price fpr call is satisfied
+            # check if watch price for call is satisfied
             if self.parameters['watch_price'] and price >= self.parameters['watch_price'] and self.order_type == 'call':
                 self.update_portfolio()
 
@@ -179,6 +173,7 @@ class Order:
                 
                 if paper_portfolio[self.ticker][self.order_type]['amt'] == 0:
                     paper_portfolio[self.ticker][self.order_type]['avg_cost'] = 0
+                    paper_portfolio[self.ticker][self.order_type]['link'] = ''
 
                 self.fulfilled = True
                 self.ended = datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
@@ -191,41 +186,62 @@ class Order:
                 self.profits = self.get_curr_option_price(option=o) - cost
 
                 paper_portfolio[self.ticker][self.order_type]['avg_cost'] = 0
-
+                paper_portfolio[self.ticker][self.order_type]['link'] = ''
                 self.fulfilled = True
                 self.ended = datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 
             count += 1
 
-    # function to add stocks to portfolio after purchasing call, put
+    # function to add stocks to portfolio after purchasing call, put [COMPLETE]
     def update_portfolio(self):
-        try: 
-            existing_amt = paper_portfolio[self.ticker][self.order_type]['amt']
-            additional_amt = self.parameters['amt']
+        # if option exists
+        try:
+            # get amounts and costs
+            existing_amt, additional_amt = paper_portfolio[self.ticker][self.order_type]['amt'], self.parameters['amt']
             existing_cost = paper_portfolio[self.ticker][self.order_type]['avg_cost']
-            additional_cost = self.get_curr_option_price()
-            
+            if not paper_portfolio[self.ticker][self.order_type]['link']:
+                additional_cost = self.get_curr_option_price()
+            else:
+                o = self.get_option(link=paper_portfolio[self.ticker][self.order_type]['link'])
+                additional_cost = self.get_curr_option_price(option=o)
+
+            # set new values for amount and cost
             new_amt = existing_amt + additional_amt
             new_avg_cost = (existing_amt*existing_cost + additional_amt*additional_cost)/new_amt
-
             paper_portfolio[self.ticker][self.order_type]['amt'] = new_amt
             paper_portfolio[self.ticker][self.order_type]['avg_cost'] = new_avg_cost
+            if not paper_portfolio[self.ticker][self.order_type]['link']:
+                paper_portfolio[self.ticker][self.order_type]['link'] = self.get_option()['url']
 
+            # switch fulfilled status
             self.fulfilled = True
             self.ended = datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 
+        # option doesn't exist
         except:
             paper_portfolio[self.ticker] = {'call': {'amt':0, 'avg_cost':0, 'link':''}, 'put': {'amt':0, 'avg_cost':0, 'link':''}}
 
+            # set new values
             paper_portfolio[self.ticker][self.order_type]['amt'] = self.parameters['amt']
             paper_portfolio[self.ticker][self.order_type]['avg_cost'] = self.get_curr_option_price()
-            paper_portfolio[self.ticker][self.order_type]['link'] = self.get_option()
+            paper_portfolio[self.ticker][self.order_type]['link'] = self.get_option()['url']
 
+            # switch fulfilled status
             self.fulfilled = True
             self.ended = datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 
-    # get option based on passed in parameters
+    # gets current price of STOCK [COMPLETE]
+    def get_curr_price(self):
+        curr_price = self.client.get_quote(self.ticker)
+        curr_price = float(curr_price['last_trade_price'])
+
+        return curr_price
+
+    # get option based on passed in parameters [COMPLETE]
     def get_option(self, link=''):
+        if link:
+            return {'url': link}
+
         curr_price = self.get_curr_price()
 
         options = self.client.get_options(self.ticker, nearest_friday(), self.order_type)
@@ -251,29 +267,24 @@ class Order:
                     elif float(o['strike_price']) > closest_price:
                         option = o
                         closest_price = float(o['strike_price'])
-        
-        if link:
-
-
         return option
 
-    # object repr of order
-    def get_object(self):
-        return_dict = {
-            'order_type': self.command,
-            'ticker': self.ticker,
-            'option_type': self.order_type,
-            'parameters': self.parameters,
-            'started': self.started,
-        }
+    # gets current price of OPTION [COMPLETE]
+    def get_curr_option_price(self, option=None):
+        if not option:
+            option = self.get_option()
+        instrument_url = urllib.parse.quote_plus(option['url'])
 
-        if self.fulfilled:
-            return_dict['fulfilled'] = self.ended
-            return_dict['profits_share'] = self.profits
+        # Custom request (pyrh is faulty)
+        url = 'https://api.robinhood.com/marketdata/options/?instruments=' + instrument_url
+        headers = dict(self.client.headers)
+        headers['Authorization'] = 'Bearer ' + self.client.auth_token
+        instr_data = json.loads(requests.get(url, headers=headers).text)
 
-        return return_dict
+        price = float(instr_data['results'][0]['ask_price']) * 100
+        return price
 
-    # function map
+    # function map [COMPLETE]
     order_dict = {
         'in': increase_position,
         'trim': lambda self: self.reduce_position(0.5),
