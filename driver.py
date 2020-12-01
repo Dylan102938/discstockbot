@@ -1,5 +1,5 @@
 import discord
-from new_rh_funcs import *
+from rh_funcs import *
 import parser
 import json
 
