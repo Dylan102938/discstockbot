@@ -1,29 +1,5 @@
 {
     "paper_portfolio": {
-        "BA": {
-            "call": {
-                "amt": 0,
-                "avg_cost": 0,
-                "link": ""
-            },
-            "put": {
-                "amt": 0,
-                "avg_cost": 0,
-                "link": ""
-            }
-        },
-        "SPY": {
-            "call": {
-                "amt": 0,
-                "avg_cost": 0,
-                "link": ""
-            },
-            "put": {
-                "amt": 0.25,
-                "avg_cost": 200.99999999999997,
-                "link": "https://api.robinhood.com/options/instruments/ff3f4420-f324-4ea2-a45a-300881e031c7/"
-            }
-        },
         "FB": {
             "call": {
                 "amt": 0,
@@ -31,230 +7,59 @@
                 "link": ""
             },
             "put": {
-                "amt": 0.0,
-                "avg_cost": 0,
-                "link": ""
-            }
-        },
-        "AMD": {
-            "call": {
-                "amt": 0.0,
-                "avg_cost": 0,
-                "link": ""
-            },
-            "put": {
-                "amt": 0,
-                "avg_cost": 0,
-                "link": ""
+                "amt": 0.25,
+                "avg_cost": 400.0,
+                "link": "https://api.robinhood.com/options/instruments/e9711e07-a564-4c5b-a458-3155b81c6c48/"
             }
         }
     },
     "order_catalog": [
         {
             "order_type": "in",
-            "ticker": "BA",
+            "ticker": "FB",
             "option_type": "put",
             "parameters": {
                 "amt": 1,
                 "watch_price": null
             },
-            "started": "30/11/2020 22:35:40",
-            "fulfilled": "30/11/2020 22:35:43",
+            "started": "04/12/2020 21:01:55",
+            "fulfilled": "04/12/2020 21:01:57",
             "profits_per_share": 0
         },
         {
             "order_type": "trim",
-            "ticker": "BA",
+            "ticker": "FB",
             "option_type": "put",
             "parameters": {
                 "amt": 1,
                 "watch_price": null
             },
-            "started": "30/11/2020 22:35:48",
-            "fulfilled": "30/11/2020 22:35:49",
+            "started": "04/12/2020 21:02:02",
+            "fulfilled": "04/12/2020 21:02:02",
             "profits_per_share": 0.0
         },
         {
-            "order_type": "close",
-            "ticker": "BA",
+            "order_type": "trim",
+            "ticker": "FB",
             "option_type": "put",
             "parameters": {
                 "amt": 1,
-                "watch_price": null,
-                "breakeven": true
+                "watch_price": null
             },
-            "started": "30/11/2020 22:35:55",
-            "fulfilled": "30/11/2020 22:36:01",
+            "started": "04/12/2020 21:02:08",
+            "fulfilled": "04/12/2020 21:02:08",
             "profits_per_share": 0.0
         },
         {
             "order_type": "close",
-            "ticker": "BA",
+            "ticker": "FB",
             "option_type": "put",
             "parameters": {
                 "amt": 1,
                 "watch_price": null,
-                "breakeven": true,
                 "rest": true
             },
-            "started": "30/11/2020 22:36:07",
-            "fulfilled": "30/11/2020 22:36:13",
-            "profits_per_share": 415.00000000000006
-        },
-        {
-            "order_type": "in",
-            "ticker": "SPY",
-            "option_type": "put",
-            "parameters": {
-                "amt": 1,
-                "watch_price": null
-            },
-            "started": "30/11/2020 22:36:18",
-            "fulfilled": "30/11/2020 22:36:20",
-            "profits_per_share": 0
-        },
-        {
-            "order_type": "trim",
-            "ticker": "SPY",
-            "option_type": "put",
-            "parameters": {
-                "amt": 1,
-                "watch_price": null
-            },
-            "started": "30/11/2020 22:36:24",
-            "fulfilled": "30/11/2020 22:36:25",
-            "profits_per_share": 0.0
-        },
-        {
-            "order_type": "trim",
-            "ticker": "SPY",
-            "option_type": "put",
-            "parameters": {
-                "amt": 1,
-                "watch_price": null
-            },
-            "started": "30/11/2020 22:36:31",
-            "fulfilled": "30/11/2020 22:36:32",
-            "profits_per_share": 0.0
-        },
-        {
-            "order_type": "close",
-            "ticker": "SPY",
-            "option_type": "put",
-            "parameters": {
-                "amt": 1,
-                "watch_price": null,
-                "breakeven": true
-            },
-            "started": "30/11/2020 22:36:39"
-        },
-        {
-            "order_type": "in",
-            "ticker": "FB",
-            "option_type": "put",
-            "parameters": {
-                "amt": 1,
-                "watch_price": null
-            },
-            "started": "30/11/2020 22:37:46",
-            "fulfilled": "30/11/2020 22:37:48",
-            "profits_per_share": 0
-        },
-        {
-            "order_type": "trim",
-            "ticker": "FB",
-            "option_type": "put",
-            "parameters": {
-                "amt": 1,
-                "watch_price": null
-            },
-            "started": "30/11/2020 22:44:53",
-            "fulfilled": "30/11/2020 22:44:53",
-            "profits_per_share": 0.0
-        },
-        {
-            "order_type": "close",
-            "ticker": "FB",
-            "option_type": "put",
-            "parameters": {
-                "amt": 1,
-                "watch_price": null,
-                "breakeven": true
-            },
-            "started": "30/11/2020 22:45:01",
-            "fulfilled": "30/11/2020 22:45:06",
-            "profits_per_share": 0.0
-        },
-        {
-            "order_type": "trim",
-            "ticker": "FB",
-            "option_type": "put",
-            "parameters": {
-                "amt": 1,
-                "watch_price": null
-            },
-            "started": "30/11/2020 22:45:05",
-            "fulfilled": "30/11/2020 22:45:05",
-            "profits_per_share": 0.0
-        },
-        {
-            "order_type": "close",
-            "ticker": "FB",
-            "option_type": "put",
-            "parameters": {
-                "amt": 1,
-                "watch_price": null,
-                "breakeven": true
-            },
-            "started": "30/11/2020 22:45:23"
-        },
-        {
-            "order_type": "in",
-            "ticker": "AMD",
-            "option_type": "call",
-            "parameters": {
-                "amt": 1,
-                "watch_price": null
-            },
-            "started": "30/11/2020 22:46:46",
-            "fulfilled": "30/11/2020 22:46:48",
-            "profits_per_share": 0
-        },
-        {
-            "order_type": "trim",
-            "ticker": "AMD",
-            "option_type": "call",
-            "parameters": {
-                "amt": 1,
-                "watch_price": null
-            },
-            "started": "30/11/2020 22:47:09",
-            "fulfilled": "30/11/2020 22:47:09",
-            "profits_per_share": 0.0
-        },
-        {
-            "order_type": "in",
-            "ticker": "AMD",
-            "option_type": "call",
-            "parameters": {
-                "amt": 1,
-                "watch_price": null
-            },
-            "started": "30/11/2020 22:47:18",
-            "fulfilled": "30/11/2020 22:47:19",
-            "profits_per_share": 0
-        },
-        {
-            "order_type": "close",
-            "ticker": "AMD",
-            "option_type": "call",
-            "parameters": {
-                "amt": 1,
-                "watch_price": null
-            },
-            "started": "30/11/2020 22:47:30",
-            "fulfilled": "30/11/2020 22:47:30",
-            "profits_per_share": 0.0
+            "started": "04/12/2020 21:02:20"
         }
     ]
 }

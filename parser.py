@@ -11,6 +11,7 @@ def parse(sent, commands, cats, tickers, parameters):
     for word in s:
         if word.lower() in commands:
             command = eval(commands[word.lower()])
+            break
         
         if word.lower() in cats:
             cat = cats[word.lower()]
@@ -20,10 +21,14 @@ def parse(sent, commands, cats, tickers, parameters):
     
     if command != "":
         for i in range(len(s)):
+            if s[i].lower() in cats:
+                cat = cats[s[i].lower()]
+            if s[i].lower() in tickers:
+                ticker = tickers[s[i].lower()]
             if s[i-1].lower() in parameters:
                 params.append(eval(parameters[s[i - 1].lower()]))
 
-        if "%+" in sent or "%+" in sent:
+        if "%+" in sent or "%-" in sent:
             params = ['fake']
 
         return {'command': command, 'ticker': ticker, 'category': cat, 'parameters': params}
