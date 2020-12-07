@@ -1,4 +1,4 @@
-from pyrh import Robinhood
+from uuid import uuid4
 import json
 import threading
 import time
@@ -15,7 +15,7 @@ default = {'amt': 1, 'watch_price': None}
 def nearest_friday():
     today = datetime.date.today()
     friday = today + datetime.timedelta((3-today.weekday())%7+1)
-    
+
     return friday.strftime("%Y-%m-%d")
 
 
@@ -27,7 +27,7 @@ def parse_params(parameters):
         if 'over' in param or 'below' in param:
             return_dict['watch_price'] = float(param.split()[1])
         if 'light' in param:
-            return_dict['amt'] = 0.15
+            return_dict['amt'] = 0.2
         if 'breakeven' in param:
             return_dict['breakeven'] = True
         if 'rest' in param:
@@ -46,11 +46,12 @@ class Order:
     parameters: additional order modifications as a dict
     """
     # [COMPLETE]
-    def __init__(self, client, command, ticker, order_type, parameters={'amt':1, 'watch_price':None}):
+    def __init__(self, client, command, ticker, order_type, max_equity=1000, parameters={'amt':1, 'watch_price':None}):
         self.client = client
         self.command = command
         self.ticker = ticker
         self.order_type = order_type
+        self.max_equity = max_equity
         self.parameters = parameters
         self.fulfilled = False
         self.profits = 0
@@ -88,12 +89,10 @@ class Order:
 
     # handles 'in' command [COMPLETE]
     def increase_position(self):
-        # get option of interest
-        option = self.get_option()
-
         # no limit for strike price set
         if not self.parameters['watch_price']:
-            self.update_portfolio()
+            self.place_buy()
+
             return self
 
         # limit for strike price set, start threading function
@@ -106,26 +105,18 @@ class Order:
     # Function handles 'trim' and 'close' command [COMPLETE]
     def reduce_position(self, pct):
         # no additional exiting parameters, exit position right away
+        target = self.get_option_from_positions()
         if 'breakeven' not in self.parameters and 'rest' not in self.parameters:
-            paper_portfolio[self.ticker][self.order_type]['amt'] *= pct
-            o = self.get_option(link=paper_portfolio[self.ticker][self.order_type]['link'])
-            self.profits = self.get_curr_option_price(option=o) - paper_portfolio[self.ticker][self.order_type]['avg_cost']
-            
-            if paper_portfolio[self.ticker][self.order_type]['amt'] == 0:
-                paper_portfolio[self.ticker][self.order_type]['avg_cost'] = 0
-                paper_portfolio[self.ticker][self.order_type]['link'] = ''
-
-            self.fulfilled = True
-            self.ended = datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+            if target:
+                self.place_sell(target, pct)
 
             return self
 
         # additional exiting parameters, pass to threading function
         else:
-            self.pct = pct
-            action = threading.Thread(target=self.wait_for_price, args=())
+            action = threading.Thread(target=self.wait_for_price, args=(target, pct,))
             action.start()
-            
+
             return self
 
     # function to handle watch command [COMPLETE]
@@ -140,95 +131,40 @@ class Order:
         return self
 
     # threading function target [COMPLETE]
-    def wait_for_price(self):
-        count = 0
+    def wait_for_price(self, target=None, pct=None):
+        # check if item exists in portfolio
+        try:
+            cost = float(target['average_open_price'])
+        except:
+            cost = 0
 
+        count = 0
         # checks if parameters match every 5 seconds, loops 3600 times total [COMPLETE]
         while not self.fulfilled and count < 3600:
             time.sleep(5)
-
-            price = self.get_curr_price()
-
-            # check if item exists in portfolio dict
-            try:
-                cost = paper_portfolio[self.ticker][self.order_type]['avg_cost']
-            except:
-                cost = 0
+            stock_price = self.get_curr_price()
+            option_price = self.get_curr_option_price(option=self.get_option(link=target['legs'][0]['option']))
 
             # check if watch price for call is satisfied
-            if self.parameters['watch_price'] and price >= self.parameters['watch_price'] and self.order_type == 'call':
-                self.update_portfolio()
+            if self.parameters['watch_price'] and stock_price >= self.parameters['watch_price'] and self.order_type == 'call':
+                self.place_buy()
 
             # check if watch price for put is satisfied
-            elif self.parameters['watch_price'] and price <= self.parameters['watch_price'] and self.order_type == 'put':
-                self.update_portfolio()
-
-            # check if breakeven for close or trim order is satisfied
-            if price <= cost and 'breakeven' in self.parameters:
-                # replace with actual selling function
-                paper_portfolio[self.ticker][self.order_type]['amt'] *= self.pct
-                
-                o = self.get_option(link=paper_portfolio[self.ticker][self.order_type]['link'])
-                self.profits = self.get_curr_option_price(option=o) - cost
-                
-                if paper_portfolio[self.ticker][self.order_type]['amt'] == 0:
-                    paper_portfolio[self.ticker][self.order_type]['avg_cost'] = 0
-                    paper_portfolio[self.ticker][self.order_type]['link'] = ''
-
-                self.fulfilled = True
-                self.ended = datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+            elif self.parameters['watch_price'] and stock_price <= self.parameters['watch_price'] and self.order_type == 'put':
+                self.place_buy()
 
             # check if rest for close or trim is satisfied
             if 'rest' in self.parameters and (self.command == 'trim' or self.command == 'close'):
-                paper_portfolio[self.ticker][self.order_type]['amt'] = 0
-                
-                o = self.get_option(link=paper_portfolio[self.ticker][self.order_type]['link'])
-                self.profits = self.get_curr_option_price(option=o) - cost
+                if 'breakeven' in self.parameters:
+                    pct = 0
+                else:
+                    self.place_sell(target, 0)
 
-                paper_portfolio[self.ticker][self.order_type]['avg_cost'] = 0
-                paper_portfolio[self.ticker][self.order_type]['link'] = ''
-                self.fulfilled = True
-                self.ended = datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+            # check if breakeven for close or trim order is satisfied
+            if option_price <= cost and 'breakeven' in self.parameters:
+                self.place_sell(target, pct)
 
             count += 1
-
-    # function to add stocks to portfolio after purchasing call, put [COMPLETE]
-    def update_portfolio(self):
-        # if option exists
-        try:
-            # get amounts and costs
-            existing_amt, additional_amt = paper_portfolio[self.ticker][self.order_type]['amt'], self.parameters['amt']
-            existing_cost = paper_portfolio[self.ticker][self.order_type]['avg_cost']
-            if not paper_portfolio[self.ticker][self.order_type]['link']:
-                additional_cost = self.get_curr_option_price()
-            else:
-                o = self.get_option(link=paper_portfolio[self.ticker][self.order_type]['link'])
-                additional_cost = self.get_curr_option_price(option=o)
-
-            # set new values for amount and cost
-            new_amt = existing_amt + additional_amt
-            new_avg_cost = (existing_amt*existing_cost + additional_amt*additional_cost)/new_amt
-            paper_portfolio[self.ticker][self.order_type]['amt'] = new_amt
-            paper_portfolio[self.ticker][self.order_type]['avg_cost'] = new_avg_cost
-            if not paper_portfolio[self.ticker][self.order_type]['link']:
-                paper_portfolio[self.ticker][self.order_type]['link'] = self.get_option()['url']
-
-            # switch fulfilled status
-            self.fulfilled = True
-            self.ended = datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-
-        # option doesn't exist
-        except:
-            paper_portfolio[self.ticker] = {'call': {'amt':0, 'avg_cost':0, 'link':''}, 'put': {'amt':0, 'avg_cost':0, 'link':''}}
-
-            # set new values
-            paper_portfolio[self.ticker][self.order_type]['amt'] = self.parameters['amt']
-            paper_portfolio[self.ticker][self.order_type]['avg_cost'] = self.get_curr_option_price()
-            paper_portfolio[self.ticker][self.order_type]['link'] = self.get_option()['url']
-
-            # switch fulfilled status
-            self.fulfilled = True
-            self.ended = datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 
     # gets current price of STOCK [COMPLETE]
     def get_curr_price(self):
@@ -281,8 +217,117 @@ class Order:
         headers['Authorization'] = 'Bearer ' + self.client.auth_token
         instr_data = json.loads(requests.get(url, headers=headers).text)
 
-        price = float(instr_data['results'][0]['ask_price']) * 100
+        price = float(instr_data['results'][0]['adjusted_mark_price']) * 100
         return price
+
+    # gets current options positions
+    def get_owned_options(self):
+        url = 'https://api.robinhood.com/options/aggregate_positions/?nonzero=True'
+        headers = {
+            'authorization': 'Bearer ' + self.client.auth_token,
+            'user-agent': 'Robinhood/823 (iPhone; iOS 7.1.2; Scale/2.00)'
+        }
+        result = requests.get(url, headers=headers)
+        result = json.loads(result.text)['results']
+        option_list = []
+        for option in result:
+            if len(option['legs']) < 2:
+                option_list.append(option)
+
+        return option_list
+
+    # finds an option given Order parameters from current positions:
+    def get_option_from_positions(self):
+        options = self.get_owned_options()
+
+        found_option = None
+        for o in options:
+            if self.ticker == o['symbol'] and self.order_type == o['legs'][0]['option_type']:
+                found_option = o
+                break
+
+        return found_option
+
+    # calls buy endpoint on RH
+    def place_buy(self):
+        option = self.get_option()
+        price = self.get_curr_option_price(option=option)
+        amt = str(int(self.parameters['amt'] * self.max_equity / price))
+        price = str(round(price / 100, 2))
+
+        url = "https://api.robinhood.com/options/orders/"
+        payload = "{\n" \
+                  "    \"quantity\":\"" + amt + "\",\n" \
+                  "    \"direction\":\"debit\",\n" \
+                  "    \"price\":\"" + price + "\",\n" \
+                  "    \"type\":\"limit\",\n" \
+                  "    \"account\":\"https://api.robinhood.com/accounts/5QT80700/\",\n" \
+                  "    \"time_in_force\":\"gfd\",\n" \
+                  "    \"trigger\":\"immediate\",\n" \
+                  "    \"legs\":[\n" \
+                  "        {\n" \
+                  "            \"side\":\"buy\",\n" \
+                  "            \"option\":\"" + option['url'] + "\",\n" \
+                  "            \"position_effect\":\"open\",\n" \
+                  "            \"ratio_quantity\":\"1\"\n" \
+                  "        }\n" \
+                  "    ],\n" \
+                  "    \"override_day_trade_checks\":false,\n" \
+                  "    \"override_dtbp_checks\":false,\n" \
+                  "    \"ref_id\":\"" + str(uuid4()) + "\"\n" \
+                  "}"
+        headers = {
+            'x-robinhood-api-version': '1.411.9',
+            'Authorization': 'Bearer ' + self.client.auth_token,
+            'Content-Type': 'application/json'
+        }
+
+        response = requests.post(url, headers=headers, data=payload)
+        if response.status_code == 201:
+            self.fulfilled = True
+            self.ended = datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+
+            return json.loads(response.text)
+
+    # calls sell endpoint on RH
+    def place_sell(self, target, pct):
+        price = self.get_curr_option_price(option=self.get_option(link=target['legs'][0]['option']))
+        price = str(round(price / 100, 2))
+        amt = str(int((1-pct)*float(target['quantity'])))
+
+        url = "https://api.robinhood.com/options/orders/"
+        payload = "{\n" \
+                  "    \"quantity\":\"" + amt + "\",\n" \
+                  "    \"direction\":\"credit\",\n" \
+                  "    \"price\":\"" + price + "\",\n" \
+                  "    \"type\":\"limit\",\n" \
+                  "    \"account\":\"https://api.robinhood.com/accounts/5QT80700/\",\n" \
+                  "    \"time_in_force\":\"gfd\",\n" \
+                  "    \"trigger\":\"immediate\",\n" \
+                  "    \"legs\":[\n" \
+                  "        {\n" \
+                  "            \"side\":\"sell\",\n" \
+                  "            \"option\":\"" + target['legs'][0]['option'] + "\",\n" \
+                  "            \"position_effect\":\"close\",\n" \
+                  "            \"ratio_quantity\":\"" + str(target['legs'][0]['ratio_quantity']) + "\"\n" \
+                  "        }\n" \
+                  "    ],\n" \
+                  "    \"override_day_trade_checks\":false,\n" \
+                  "    \"override_dtbp_checks\":false,\n" \
+                  "    \"ref_id\":\"" + str(uuid4()) + "\"\n" \
+                  "}"
+        headers = {
+            'x-robinhood-api-version': '1.411.9',
+            'Authorization': 'Bearer ' + self.client.auth_token,
+            'Content-Type': 'application/json'
+        }
+
+        response = requests.post(url, headers=headers, data=payload)
+        if response.status_code == 201:
+            self.fulfilled = True
+            self.ended = datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+
+            return json.loads(response.text)
 
     # function map [COMPLETE]
     order_dict = {

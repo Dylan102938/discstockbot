@@ -1,15 +1,19 @@
-import discord
+from pyrh import Robinhood
 from rh_funcs import *
+import discord
 import parser
 import json
 
 last_ticker = ""
 last_category = ""
 order_catalog = []
+max_equity = 1000
 trades_json = {'paper_portfolio': paper_portfolio, 'order_catalog': order_catalog}
-rh = Robinhood()
 
+
+rh = Robinhood()
 client = discord.Client()
+
 
 @client.event
 async def on_ready():
@@ -38,7 +42,12 @@ def process_and_run(message):
             parsed_dict['category'] = last_category
         print(parsed_dict)
 
-        new_order = Order(rh, parsed_dict['command'], parsed_dict['ticker'], parsed_dict['category'], parse_params(parsed_dict['parameters']))
+        new_order = Order(rh,
+                          parsed_dict['command'],
+                          parsed_dict['ticker'],
+                          parsed_dict['category'],
+                          max_equity=max_equity,
+                          parameters=parse_params(parsed_dict['parameters']))
         if new_order:
             order_catalog.append(new_order)
 
