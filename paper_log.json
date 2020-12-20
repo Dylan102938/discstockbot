@@ -1,29 +1,169 @@
 {
-    "paper_portfolio": {
-        "FB": {
-            "call": {
-                "amt": 0,
-                "avg_cost": 0,
-                "link": ""
-            },
-            "put": {
-                "amt": 0.25,
-                "avg_cost": 400.0,
-                "link": "https://api.robinhood.com/options/instruments/e9711e07-a564-4c5b-a458-3155b81c6c48/"
-            }
-        }
-    },
     "order_catalog": [
         {
+            "order_type": "watch",
+            "ticker": "AMD",
+            "option_type": "put",
+            "parameters": {
+                "amt": 1,
+                "watch_price": 90.75
+            },
+            "started": "11/12/2020 15:05:27",
+            "fulfilled": "11/12/2020 15:05:27",
+            "profits_per_share": 0
+        },
+        {
+            "order_type": "close",
+            "ticker": "SPY",
+            "option_type": "call",
+            "parameters": {
+                "amt": 1,
+                "watch_price": null
+            },
+            "started": "11/12/2020 15:08:04"
+        },
+        {
             "order_type": "in",
+            "ticker": "SPY",
+            "option_type": "call",
+            "parameters": {
+                "amt": 1,
+                "watch_price": null
+            },
+            "started": "11/12/2020 15:19:43",
+            "fulfilled": "11/12/2020 15:19:45",
+            "profits_per_share": 0
+        },
+        {
+            "order_type": "close",
+            "ticker": "SPY",
+            "option_type": "call",
+            "parameters": {
+                "amt": 1,
+                "watch_price": null
+            },
+            "started": "11/12/2020 15:24:07",
+            "fulfilled": "11/12/2020 15:24:08",
+            "profits_per_share": 0
+        },
+        {
+            "order_type": "in",
+            "ticker": "SPY",
+            "option_type": "put",
+            "parameters": {
+                "amt": 0.2,
+                "watch_price": null
+            },
+            "started": "11/12/2020 15:49:06"
+        },
+        {
+            "order_type": "trim",
+            "ticker": "SPY",
+            "option_type": "put",
+            "parameters": {
+                "amt": 1,
+                "watch_price": null
+            },
+            "started": "11/12/2020 15:51:21"
+        },
+        {
+            "order_type": "trim",
+            "ticker": "SPY",
+            "option_type": "put",
+            "parameters": {
+                "amt": 1,
+                "watch_price": null
+            },
+            "started": "11/12/2020 15:52:22"
+        },
+        {
+            "order_type": "close",
+            "ticker": "SPY",
+            "option_type": "put",
+            "parameters": {
+                "amt": 1,
+                "watch_price": null
+            },
+            "started": "11/12/2020 15:55:26"
+        },
+        {
+            "order_type": "watch",
+            "ticker": "FB",
+            "option_type": "put",
+            "parameters": {
+                "amt": 1,
+                "watch_price": 272.95
+            },
+            "started": "11/12/2020 16:13:14",
+            "fulfilled": "11/12/2020 16:13:14",
+            "profits_per_share": 0
+        },
+        {
+            "order_type": "close",
+            "ticker": "BA",
+            "option_type": "put",
+            "parameters": {
+                "amt": 1,
+                "watch_price": null
+            },
+            "started": "11/12/2020 16:22:00"
+        },
+        {
+            "order_type": "in",
+            "ticker": "BA",
+            "option_type": "put",
+            "parameters": {
+                "amt": 1,
+                "watch_price": null
+            },
+            "started": "11/12/2020 16:23:14",
+            "fulfilled": "11/12/2020 16:23:16",
+            "profits_per_share": 0
+        },
+        {
+            "order_type": "trim",
+            "ticker": "BA",
+            "option_type": "put",
+            "parameters": {
+                "amt": 1,
+                "watch_price": null
+            },
+            "started": "11/12/2020 16:24:06",
+            "fulfilled": "11/12/2020 16:24:07",
+            "profits_per_share": 0
+        },
+        {
+            "order_type": "watch",
             "ticker": "FB",
             "option_type": "put",
             "parameters": {
                 "amt": 1,
                 "watch_price": null
             },
-            "started": "04/12/2020 21:01:55",
-            "fulfilled": "04/12/2020 21:01:57",
+            "started": "11/12/2020 16:25:09",
+            "fulfilled": "11/12/2020 16:25:09",
+            "profits_per_share": 0
+        },
+        {
+            "order_type": "trim",
+            "ticker": "BA",
+            "option_type": "put",
+            "parameters": {
+                "amt": 1,
+                "watch_price": null
+            },
+            "started": "11/12/2020 16:27:10"
+        },
+        {
+            "order_type": "close",
+            "ticker": "BA",
+            "option_type": "put",
+            "parameters": {
+                "amt": 1,
+                "watch_price": null
+            },
+            "started": "11/12/2020 16:28:01",
+            "fulfilled": "11/12/2020 16:28:02",
             "profits_per_share": 0
         },
         {
@@ -34,9 +174,7 @@
                 "amt": 1,
                 "watch_price": null
             },
-            "started": "04/12/2020 21:02:02",
-            "fulfilled": "04/12/2020 21:02:02",
-            "profits_per_share": 0.0
+            "started": "11/12/2020 16:28:30"
         },
         {
             "order_type": "trim",
@@ -46,20 +184,133 @@
                 "amt": 1,
                 "watch_price": null
             },
-            "started": "04/12/2020 21:02:08",
-            "fulfilled": "04/12/2020 21:02:08",
-            "profits_per_share": 0.0
+            "started": "11/12/2020 16:29:34"
         },
         {
             "order_type": "close",
-            "ticker": "FB",
+            "ticker": "BA",
             "option_type": "put",
             "parameters": {
                 "amt": 1,
-                "watch_price": null,
-                "rest": true
+                "watch_price": null
             },
-            "started": "04/12/2020 21:02:20"
+            "started": "11/12/2020 16:30:56"
+        },
+        {
+            "order_type": "close",
+            "ticker": "BA",
+            "option_type": "call",
+            "parameters": {
+                "amt": 1,
+                "watch_price": null
+            },
+            "started": "11/12/2020 16:38:32"
+        },
+        {
+            "order_type": "close",
+            "ticker": "BA",
+            "option_type": "call",
+            "parameters": {
+                "amt": 1,
+                "watch_price": null
+            },
+            "started": "11/12/2020 17:01:54"
+        },
+        {
+            "order_type": "close",
+            "ticker": "BA",
+            "option_type": "call",
+            "parameters": {
+                "amt": 1,
+                "watch_price": null
+            },
+            "started": "11/12/2020 17:11:03"
+        },
+        {
+            "order_type": "in",
+            "ticker": "ZM",
+            "option_type": "put",
+            "parameters": {
+                "amt": 1,
+                "watch_price": null
+            },
+            "started": "11/12/2020 17:36:41"
+        },
+        {
+            "order_type": "close",
+            "ticker": "ZM",
+            "option_type": "put",
+            "parameters": {
+                "amt": 1,
+                "watch_price": null
+            },
+            "started": "11/12/2020 17:47:21"
+        },
+        {
+            "order_type": "trim",
+            "ticker": "ZM",
+            "option_type": "put",
+            "parameters": {
+                "amt": 1,
+                "watch_price": null
+            },
+            "started": "11/12/2020 18:17:46"
+        },
+        {
+            "order_type": "trim",
+            "ticker": "ZM",
+            "option_type": "put",
+            "parameters": {
+                "amt": 1,
+                "watch_price": null
+            },
+            "started": "11/12/2020 18:18:01"
+        },
+        {
+            "order_type": "trim",
+            "ticker": "ZM",
+            "option_type": "put",
+            "parameters": {
+                "amt": 1,
+                "watch_price": null
+            },
+            "started": "11/12/2020 18:20:21"
+        },
+        {
+            "order_type": "in",
+            "ticker": "SPY",
+            "option_type": "put",
+            "parameters": {
+                "amt": 1,
+                "watch_price": null
+            },
+            "started": "11/12/2020 18:22:46",
+            "fulfilled": "11/12/2020 18:22:48",
+            "profits_per_share": 0
+        },
+        {
+            "order_type": "close",
+            "ticker": "SPY",
+            "option_type": "put",
+            "parameters": {
+                "amt": 1,
+                "watch_price": null
+            },
+            "started": "11/12/2020 18:27:51",
+            "fulfilled": "11/12/2020 18:27:52",
+            "profits_per_share": 0
+        },
+        {
+            "order_type": "watch",
+            "ticker": "SPY",
+            "option_type": "put",
+            "parameters": {
+                "amt": 1,
+                "watch_price": null
+            },
+            "started": "11/12/2020 19:23:54",
+            "fulfilled": "11/12/2020 19:23:54",
+            "profits_per_share": 0
         }
     ]
 }

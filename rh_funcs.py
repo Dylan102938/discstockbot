@@ -143,7 +143,10 @@ class Order:
         while not self.fulfilled and count < 3600:
             time.sleep(5)
             stock_price = self.get_curr_price()
-            option_price = self.get_curr_option_price(option=self.get_option(link=target['legs'][0]['option']))
+            try:
+                option_price = self.get_curr_option_price(option=self.get_option(link=target['legs'][0]['option']))
+            except:
+                option_price = None
 
             # check if watch price for call is satisfied
             if self.parameters['watch_price'] and stock_price >= self.parameters['watch_price'] and self.order_type == 'call':
@@ -161,7 +164,7 @@ class Order:
                     self.place_sell(target, 0)
 
             # check if breakeven for close or trim order is satisfied
-            if option_price <= cost and 'breakeven' in self.parameters:
+            if 'breakeven' in self.parameters and option_price <= cost:
                 self.place_sell(target, pct)
 
             count += 1
@@ -252,6 +255,10 @@ class Order:
     def place_buy(self):
         option = self.get_option()
         price = self.get_curr_option_price(option=option)
+        actual_price = 0
+        while actual_price < price:
+            actual_price += 5
+        price = actual_price
         amt = str(int(self.parameters['amt'] * self.max_equity / price))
         price = str(round(price / 100, 2))
 
@@ -288,10 +295,13 @@ class Order:
             self.ended = datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 
             return json.loads(response.text)
+        else:
+            print("Request not successful: " + response.text)
 
     # calls sell endpoint on RH
     def place_sell(self, target, pct):
         price = self.get_curr_option_price(option=self.get_option(link=target['legs'][0]['option']))
+        price = round(price / 5) * 5
         price = str(round(price / 100, 2))
         amt = str(int((1-pct)*float(target['quantity'])))
 
@@ -328,6 +338,8 @@ class Order:
             self.ended = datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
 
             return json.loads(response.text)
+        else:
+            print("Request not successful: " + response.text)
 
     # function map [COMPLETE]
     order_dict = {

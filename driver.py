@@ -7,8 +7,8 @@ import json
 last_ticker = ""
 last_category = ""
 order_catalog = []
-max_equity = 1000
-trades_json = {'paper_portfolio': paper_portfolio, 'order_catalog': order_catalog}
+max_equity = 1250
+trades_json = {'order_catalog': order_catalog}
 
 
 rh = Robinhood()
@@ -34,27 +34,31 @@ def process_and_run(message):
     global last_ticker, last_category
     commands, cats, tickers, parameters = parser.words_driver()
     parsed_dict = parser.parse(message, commands, cats, tickers, parameters)
-
+    
     if parsed_dict:
         if not parsed_dict['ticker']:
             parsed_dict['ticker'] = last_ticker
         if not parsed_dict['category']:
             parsed_dict['category'] = last_category
         print(parsed_dict)
-
+        
+        portfolio = master_order.get_owned_options()
+        target_eq = max_equity
+        for option in portfolio:
+            target_eq -= float(option['quantity'])*float(option['average_open_price'])
+        print('Current free equity is:', target_eq)
+        
         new_order = Order(rh,
                           parsed_dict['command'],
                           parsed_dict['ticker'],
                           parsed_dict['category'],
-                          max_equity=max_equity,
+                          max_equity=target_eq,
                           parameters=parse_params(parsed_dict['parameters']))
         if new_order:
             order_catalog.append(new_order)
 
             last_ticker = parsed_dict['ticker']
             last_category = parsed_dict['category']
-
-            trades_json['paper_portfolio'] = paper_portfolio
 
             with open('paper_log.json', 'w') as f:
                 obj_repr_orders = []
@@ -72,6 +76,9 @@ def process_and_run(message):
 user = input("Enter Robinhood Email: ")
 passw = input("Enter Robinhood Password: ")
 rh.login(username=user, password=passw, challenge_type='sms')
+
+# Use this order to get overarching information regarding portfolio positions, liquidity, etc.
+master_order = Order(rh, 'watch', 'AAPL', 'call')
 
 # login to discord
 disc_token = ''
