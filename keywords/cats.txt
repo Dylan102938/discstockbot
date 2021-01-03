@@ -1,4 +1,0 @@
-put, put
-puts, put
-calls, call
-call, call
