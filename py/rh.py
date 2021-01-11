@@ -4,12 +4,15 @@ import database
 import requests
 import random
 import time
+import urllib.parse
 
 urls = {
     'login': lambda: 'https://api.robinhood.com/oauth2/token/',
     'challenge': lambda challenge_id: 'https://api.robinhood.com/challenge/{0}/respond/'.format(challenge_id),
     'account': lambda: 'https://api.robinhood.com/accounts/',
     'orders': lambda: 'https://api.robinhood.com/options/orders/',
+    'instrument_url': lambda id: 'https://api.robinhood.com/instruments/{0}/'.format(id),
+    'instrument_data': lambda s: 'https://api.robinhood.com/marketdata/quotes/?bounds=trading&include_inactive=true&instruments={0}'.format(s),
     'option_orders': lambda order_id=None: 'https://api.robinhood.com/options/orders/{0}/'.format(order_id) if order_id else 'https://api.robinhood.com/options/orders/',
     'option_instruments': lambda id=None: 'https://api.robinhood.com/options/instruments/{0}/'.format(id) if id else 'https://api.robinhood.com/options/instruments/',
     'option_data': lambda url: 'https://api.robinhood.com/marketdata/options/?instruments={0}'.format(url),
@@ -135,6 +138,41 @@ class Robinhood:
         data = self.send_get(url, 'indexzero')
 
         return(data)
+
+    def get_instrument_data(self, ticker):
+        instrument_id = id_for_instrument(ticker)
+        instrument_url = urllib.parse.quote_plus(urls['instrument_url'](instrument_id))
+
+        url = urls['instrument_data'](instrument_url)
+
+        db, cursor = database.connect_db()
+        query = "SELECT oauth FROM accounts WHERE name='oscar.s.lee@gmail.com' LIMIT 1;"
+        cursor.execute(query)
+        oauth_token = cursor.fetchall()[0][0]
+
+        self.login(oauth=oauth_token)
+        result = self.send_get(url)
+        return result['results'][0]
+
+    def get_option_data(self, ticker, strike_price, option_type, exp_date):
+        db, cursor = database.connect_db()
+        query = "SELECT oauth FROM accounts WHERE name='oscar.s.lee@gmail.com' LIMIT 1;"
+        cursor.execute(query)
+        oauth_token = cursor.fetchall()[0][0]
+
+        self.login(oauth=oauth_token)
+        try:
+            ticker = ticker.upper().strip()
+        except AttributeError as message:
+            print(message)
+            return None
+
+        option_id = id_for_option(ticker, exp_date, strike_price, option_type)
+        instrument_url = urllib.parse.quote_plus(urls['option_instruments'](option_id))
+        url = urls['option_data'](instrument_url)
+
+        result = self.send_get(url)
+        return result
 
     def place_buy(self, symbol, expirationDate, strike, optionType, price, quantity):
         try:

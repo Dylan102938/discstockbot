@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from handler import *
 import urllib.parse
+import time
 
 app = Flask(__name__)
 CORS(app)
@@ -11,6 +12,7 @@ CORS(app)
 def exec_order():
     if request.method == "POST":
         h = Handler()
+        rh = Robinhood()
 
         command = request.json['command']
         ticker = request.json['ticker']
@@ -19,6 +21,25 @@ def exec_order():
         price = float(request.json['price'])
         exp_date = request.json['exp_date']
         pct = float(request.json['pct'])
+
+        try:
+            watch_price = float(request.json['watch_price'])
+        except:
+            watch_price = None
+
+        curr_price = float(rh.get_instrument_data(ticker)['last_trade_price'])
+        counter = 0
+        if option_type == 'call':
+            while watch_price and curr_price < watch_price and counter < 3600:
+                time.sleep(5)
+                curr_price = float(rh.get_instrument_data(ticker)['last_trade_price'])
+                counter += 1
+
+        else:
+            while watch_price and curr_price > watch_price and counter < 3600:
+                time.sleep(5)
+                curr_price = float(rh.get_instrument_data(ticker)['last_trade_price'])
+                counter += 1
 
         data = h.execute_order(command, ticker, strike_price, option_type, price, exp_date, pct)
         return jsonify({'order_statuses': data})
@@ -38,25 +59,8 @@ def get_option():
         option_type = request.json['option_type']
         exp_date = request.json['exp_date']
 
-        db, cursor = database.connect_db()
-        query = "SELECT oauth FROM accounts WHERE name='oscar.s.lee@gmail.com' LIMIT 1;"
-        cursor.execute(query)
-        oauth_token = cursor.fetchall()[0][0]
-
         rh = Robinhood()
-        rh.login(oauth=oauth_token)
-        try:
-            ticker = ticker.upper().strip()
-        except AttributeError as message:
-            print(message)
-            return None
-
-        option_id = id_for_option(ticker, exp_date, strike_price, option_type)
-        instrument_url = urllib.parse.quote_plus(urls['option_instruments'](option_id))
-        url = urls['option_data'](instrument_url)
-
-        result = rh.send_get(url)
-        return result
+        return rh.get_option_data(ticker, strike_price, option_type, exp_date)
 
 
 if __name__ == '__main__':

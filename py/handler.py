@@ -1,4 +1,5 @@
 from rh import *
+import threading
 
 class Handler:
     def __init__(self):
@@ -8,7 +9,8 @@ class Handler:
 
     def execute_order(self, command, ticker, strike_price, option_type, price, exp_date, pct):
         order_datas = []
-        for account in self.accounts:
+        def order(account):
+            nonlocal ticker
             rh = Robinhood()
             rh.login(oauth=account[2], equity=1000)
             data = None
@@ -34,5 +36,14 @@ class Handler:
 
             print(data)
             order_datas.append(data)
+
+        threads = list()
+        for account in self.accounts:
+            x = threading.Thread(target=order, args=(account,))
+            threads.append(x)
+            x.start()
+
+        for i, thread in enumerate(threads):
+            thread.join()
 
         return order_datas

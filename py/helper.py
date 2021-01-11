@@ -25,7 +25,7 @@ def generate_device_token():
 
 def id_for_option(symbol, expirationDate, strike, optionType):
     symbol = symbol.upper()
-    chain_id = id_for_chain(symbol)
+    chain_id = id_for_instrument(symbol, chain=True)
     payload = {
         'chain_id': chain_id,
         'expiration_dates': expirationDate,
@@ -73,7 +73,7 @@ def id_for_option(symbol, expirationDate, strike, optionType):
     return(listOfOptions[0]['id'])
 
 
-def id_for_chain(symbol):
+def id_for_instrument(symbol, chain=False):
     try:
         symbol = symbol.upper().strip()
     except AttributeError as message:
@@ -99,8 +99,10 @@ def id_for_chain(symbol):
     except IndexError as message:
         data = None
 
-    if data:
+    if data and chain:
         return(data['tradable_chain_id'])
+    elif data and not chain:
+        return(data['id'])
     else:
         return(data)
 
