@@ -68,14 +68,11 @@ document.getElementById('submit').onclick = function(e) {
     <td>0 / 0</td> \
     <td><button id='cancel-" + current_count +"'>Cancel Order</button></td></tr>";
 
-    document.getElementById("past_trades").innerHTML += html;
-    document.getElementById("cancel-" + current_count).addEventListener("click", function() {
-        alert("Cancelling Request!");
-        req.abort();
-        let d = new Date().toLocaleTimeString();
-        document.getElementById(current_count.toString()).children[0].innerHTML = 'Cancelled';
-        document.getElementById(current_count.toString()).children[8].innerHTML = d;
-    });
+    let elem = createElementFromHTML(html);
+    document.getElementById("past_trades").appendChild(elem);
+    document.getElementById('cancel-' + current_count).onclick = function() {
+        cancelRequest(req, current_count);
+    }
 
     let msg = "\n\nCommand: " + command.toUpperCase() +
     "\nSymbol: " + ticker +
@@ -109,4 +106,19 @@ function sendMessage(msg) {
             errorHelper(jqXHR, textStatus, errorThrown);
         },
     });
+}
+
+function cancelRequest(req, current_count) {
+    alert("Cancelling Request!");
+    req.abort();
+    let d = new Date().toLocaleTimeString();
+    document.getElementById(current_count.toString()).children[0].innerHTML = 'Cancelled';
+    document.getElementById(current_count.toString()).children[8].innerHTML = d;
+}
+
+function createElementFromHTML(htmlString) {
+    var table = document.createElement('table');
+    table.innerHTML = htmlString;
+
+    return table.firstChild.firstChild;
 }
