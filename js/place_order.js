@@ -12,22 +12,8 @@ document.getElementById('submit').onclick = function(e) {
     let pct = document.getElementById('pct').value;
     let watch_price = document.getElementById('watch_price').value;
 
-    let d = new Date().toLocaleTimeString();
-    let html = "<tr id='" + count + "'> \
-    <td>Queued</td> \
-    <td>"+ command +"</td> \
-    <td>"+ ticker +"</td> \
-    <td>"+ strike_price +"</td> \
-    <td>"+ option_type +"</td> \
-    <td>"+ price +"</td> \
-    <td>"+ pct +"</td> \
-    <td>0 / 0</td> \
-    <td>"+ d +"</td></tr>";
-
-    document.getElementById("past_trades").innerHTML += html;
-
     var current_count = count;
-    $.ajax({
+    var req = $.ajax({
         type: "POST",
         url: url + "/exec_order",
         contentType: 'application/json;charset=UTF-8',
@@ -69,6 +55,26 @@ document.getElementById('submit').onclick = function(e) {
             html += "<td>" + d + "</td>";
             document.getElementById(current_count.toString()).innerHTML = html;
         }
+    });
+
+    let html = "<tr id='" + current_count + "'> \
+    <td>Queued</td> \
+    <td>"+ command +"</td> \
+    <td>"+ ticker +"</td> \
+    <td>"+ strike_price +"</td> \
+    <td>"+ option_type +"</td> \
+    <td>"+ price +"</td> \
+    <td>"+ pct +"</td> \
+    <td>0 / 0</td> \
+    <td><button id='cancel-" + current_count +"'>Cancel Order</button></td></tr>";
+
+    document.getElementById("past_trades").innerHTML += html;
+    document.getElementById("cancel-" + current_count).addEventListener("click", function() {
+        alert("Cancelling Request!");
+        req.abort();
+        let d = new Date().toLocaleTimeString();
+        document.getElementById(current_count.toString()).children[0].innerHTML = 'Cancelled';
+        document.getElementById(current_count.toString()).children[8].innerHTML = d;
     });
 
     let msg = "\n\nCommand: " + command.toUpperCase() +
